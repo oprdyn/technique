@@ -27,9 +27,7 @@ emptyTechnique = Technique
     , techniqueBody = []
     }
 
--- TODO
-data Identifier
-    = Identifier Rope
+newtype Identifier = Identifier Rope
     deriving (Show, Eq, Ord, Generic, Hashable)
 
 unIdentifier :: Identifier -> Rope
@@ -43,6 +41,10 @@ instance Key Identifier
 newtype Label = Label Rope
     deriving (Show, Eq, Ord)
 
+unLabel :: Label -> Rope
+unLabel (Label text) = text
+{-# INLINE unLabel #-}
+
 data Attribute
     = Role Identifier
     | Place Identifier
@@ -54,15 +56,13 @@ data Attribute
     | Anywhere
 -}
 
-data Markdown
-    = Markdown Rope
+newtype Markdown = Markdown Rope
     deriving (Eq, Ord)
 
 instance Show Markdown where
     show (Markdown text) = "[quote|\n" ++ fromRope text ++ "|]"
 
-data Type
-    = Type Rope
+newtype Type = Type Rope
     deriving (Show, Eq, Ord)
 
 unitType :: Type

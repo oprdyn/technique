@@ -11,7 +11,7 @@ author: Andrew Cowie <andrew@operationaldynamics.com>
 maintainer: Andrew Cowie <andrew@operationaldynamics.com>
 copyright: © 2002-2020 Operational Dynamics and Others
 category: Tools
-tested-with: GHC == 8.6
+tested-with: GHC == 8.8
 github: oprdyn/technique
 
 dependencies:
@@ -28,6 +28,7 @@ dependencies:
   - parser-combinators
   - prettyprinter
   - prettyprinter-ansi-terminal
+  - hspec
 
 ghc-options: -Wall -Wwarn -fwarn-tabs
 
@@ -76,4 +77,5 @@ tests:
       - CheckSkeletonParser
       - CheckQuantityBehaviour
       - CheckTranslationPhase
+      - CheckEvaluationPhase
       - ExampleProcedure

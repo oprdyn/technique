@@ -10,7 +10,9 @@ Builing blocks for the translation stage of the compiler.
 module Technique.Internal where
 
 import Core.Text
+import Core.Program
 import Data.DList
+import qualified Data.List as List
 
 import Technique.Language
 import Technique.Quantity
@@ -32,7 +34,7 @@ data Value
     = Unitus
     | Literali Rope
     | Quanticle Quantity
-    | Tabularum [(Rope,Value)]
+    | Tabularum [(Label,Value)]
     | Parametriq [Value]
     deriving (Eq,Show)
 
@@ -58,7 +60,7 @@ encountered in the same scope.
 data Function
     = Unresolved Identifier
     | Subroutine Procedure Step
-    | Primitive Procedure (Step -> IO Value)
+    | Primitive Procedure (Value -> Program None Value)
 
 functionName :: Function -> Identifier
 functionName func = case func of
@@ -92,6 +94,14 @@ instance Eq Function where
             Primitive proc2 _ -> proc1 == proc2
             _ -> False
 
+{-|
+Fully resolved abstract syntax tree ready for evaluation.
+-}
+newtype Executable = Executable [Function]
+
+entryPoint :: Executable -> Maybe Function
+entryPoint (Executable funcs) = fmap fst (List.uncons funcs)
+
 newtype Name = Name Rope -- ??? upgrade to named IVar := Promise ???
     deriving (Eq,Show)
 
@@ -115,8 +125,8 @@ data Step
     | Asynchronous Offset [Name] Step              -- assignment (ie lambda, "implication introduction"
     | Invocation Offset Attribute Function Step    -- function application ("implication elimination") on a [sub] Procedure
     | Nested Offset (DList Step)
-                                            -- assumption axiom?
-                                            -- weakening?
+                                                   -- assumption axiom?
+                                                   -- weakening?
     deriving (Eq,Show)
 
 instance Located Step where

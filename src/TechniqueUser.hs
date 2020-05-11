@@ -6,7 +6,17 @@
 Programs implementing front-end commands for users: check, format
 -}
 
-module TechniqueUser where
+module TechniqueUser
+    ( commandCheckTechnique
+    , commandFormatTechnique
+    , commandSimulateTechnique
+
+    -- for testing
+    , loadTechnique
+    , parsingPhase
+    , translationPhase
+    , evaluationPhase
+    ) where
 
 import Control.Monad (forever)
 import Core.Program
@@ -17,6 +27,7 @@ import Text.Megaparsec (parse)
 
 import Technique.Builtins
 import Technique.Diagnostics ()
+import Technique.Evaluator
 import Technique.Failure
 import Technique.Formatter ()
 import Technique.Internal
@@ -105,7 +116,7 @@ the concrete syntax types and the abstract syntax we can feed to an
 evaluator.
 -}
 -- FIXME better return type
-translationPhase :: Source -> Technique -> Program None [Function]
+translationPhase :: Source -> Technique -> Program None Executable
 translationPhase source technique =
   let
     env0 = emptyEnvironment
@@ -152,3 +163,38 @@ commandFormatTechnique = do
         (\(e :: CompilationError) -> do
             write ("failed: " <> render 78 e)
             terminate (exitCodeFor e))
+
+
+commandSimulateTechnique :: Program None ()
+commandSimulateTechnique = do
+    params <- getCommandLine
+
+    let procfile = case lookupArgument "filename" params of
+            Just file   -> file
+            _           -> error "Invalid State"
+
+    catch
+        (do
+            surface <- loadTechnique procfile
+            let source = emptySource
+                    { sourceFilename = procfile
+                    , sourceContents = surface
+                    }
+            let initial = Unitus -- FIXME fake hardcoded
+
+            concrete <- parsingPhase source
+            abstract <- translationPhase source concrete
+            final <- evaluationPhase abstract initial
+
+            writeR final
+        )
+        (\(e :: CompilationError) -> do
+            write ("failed: " <> render 78 e)
+            terminate (exitCodeFor e)
+        )
+
+evaluationPhase :: Executable -> Value -> Program None Value
+evaluationPhase abstract initial = do
+    let unique = emptyUnique  -- that's a big FIXME 10-4 good buddy roger over and out
+    result <- runEvaluate unique (evaluateExecutable abstract initial)
+    return result

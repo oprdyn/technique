@@ -16,6 +16,12 @@ import Technique.Language
 import Technique.Formatter  -- already have lots of useful definitions
 import Technique.Internal
 
+
+instance Render Executable where
+    type Token Executable = TechniqueToken
+    colourize = colourizeTechnique
+    intoDocA (Executable funcs) = vcat (fmap intoDocA funcs)
+
 instance Render Function where
     type Token Function = TechniqueToken
     colourize = colourizeTechnique
@@ -27,7 +33,7 @@ instance Render Function where
                 line <> (nest 3 (" ↘ " <> intoDocA step))
         Primitive proc action ->
             annotate StepToken "Primitive" <+> annotate ProcedureToken (pretty (procedureName proc)) <>
-                line <> " ↘ <primitive>"
+                line <> " ↘ <native>"
         ))
 
 instance Render Step where
@@ -49,8 +55,8 @@ instance Render Step where
                 hsep (punctuate comma (fmap intoDocA steps)) <+>
                 rparen
 
-        Nested _ steps ->
-            vcat (toList (fmap intoDocA steps))
+        Nested _ substeps ->
+            vcat (toList (fmap intoDocA substeps))
 
         Asynchronous _ names substep ->
             annotate StepToken "Asynch" <+> commaCat names <+> "◀-" <+> intoDocA substep

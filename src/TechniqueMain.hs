@@ -1,6 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE CPP #-}
 
 import Core.Program
 import Core.Text
@@ -8,10 +9,15 @@ import Core.Text
 import TechniqueUser
     ( commandCheckTechnique
     , commandFormatTechnique
+    , commandSimulateTechnique
     )
 
 version :: Version
+#ifdef __GHCIDE__
+version = "0"
+#else
 version = $(fromPackage)
+#endif
 
 main :: IO ()
 main = do
@@ -33,6 +39,12 @@ main = do
                 The file containing the code for the procedure you want to format.
               |]
             ]
+        , Command "simulate" "Evaluate a procedure in simulation mode"
+            [ Argument "filename" [quote|
+                The file containing the code for the procedure you want to evaluate.
+              |]
+            ]
+
         ])
     executeWith context program
 
@@ -46,6 +58,7 @@ program = do
         Just command -> case command of
             "check"     -> commandCheckTechnique
             "format"    -> commandFormatTechnique
+            "simulate"  -> commandSimulateTechnique
             _       -> do
                 write "Unknown command?"
                 terminate 3
